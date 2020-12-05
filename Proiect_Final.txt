@@ -50,7 +50,8 @@ enum Menus {
                  a2 = 0
                  b = 0.99
 */
-double moving_sp, current_temp;
+double moving_sp;
+float current_temp = 0;
 int timp_inc = 0, timp_men = 0, timp_rac = 0, uptime = -1;
 double x[2] = {0, 0}, y[2] = {0, 0}, u[3] = {0, 0, 0};
 /* PID Coefs -> will be recalculated each Kp, Ki, Kd change */
@@ -100,7 +101,7 @@ void afisare_timp(void)
     if(uptime/10 <= timp_inc)
     {
       remaining = timp_inc - uptime/10;
-      moving_sp = read_values.temp * (timp_inc - remaining)/timp_inc;
+      moving_sp = current_temp + (read_values.temp-current_temp) * (timp_inc - remaining)/timp_inc;
       lcd.print(moving_sp);
       lcd.print("TInc:");
     }
@@ -113,7 +114,7 @@ void afisare_timp(void)
     else if(uptime/10 <= (timp_inc + timp_men + timp_rac))
     {
       remaining = (timp_inc + timp_men + timp_rac) - uptime/10;
-      moving_sp = read_values.temp - read_values.temp * (timp_rac - remaining)/timp_rac;
+      moving_sp = read_values.temp - (read_values.temp-current_temp) * (timp_rac - remaining)/timp_rac;
       lcd.print(moving_sp);
       lcd.print("TRac:");
     }
@@ -500,7 +501,9 @@ void setup()
 
 void loop()
 {
-  current_temp = dht.readTemperature();
+  float f = dht.readTemperature();
+  if(!isnan(f))
+    current_temp = f;
 }
 
 void TC3_Handler()   // Interrupt Service Routine (ISR) for timer TC3
